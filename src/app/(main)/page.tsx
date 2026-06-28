@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -187,11 +188,13 @@ export default function HomePage() {
               {recentlyWorn.map((item) => (
                 <Link key={item.id} href={`/wardrobe/${item.id}`}>
                   <div className="flex-shrink-0 w-20 text-center space-y-1">
-                    <div className="aspect-square bg-muted rounded-md overflow-hidden">
-                      <img
+                    <div className="aspect-square bg-muted rounded-md overflow-hidden relative">
+                      <Image
                         src={item.imageUrl}
                         alt={item.name}
-                        className="w-full h-full object-contain p-1"
+                        fill
+                        sizes="80px"
+                        className="object-contain p-1"
                       />
                     </div>
                     <p className="text-xs truncate">{item.name}</p>

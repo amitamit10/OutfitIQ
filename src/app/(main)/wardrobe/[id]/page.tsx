@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -131,11 +132,15 @@ export default function ClothingDetailPage() {
       </div>
 
       <div className="flex justify-center">
-        <img
-          src={item.imageUrl}
-          alt={item.name}
-          className="max-h-80 object-contain rounded-lg border"
-        />
+        <div className="relative h-80 w-full max-w-md">
+          <Image
+            src={item.imageUrl}
+            alt={item.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 448px"
+            className="object-contain rounded-lg border"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

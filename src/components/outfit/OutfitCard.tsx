@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,11 +69,13 @@ export function OutfitCard({ outfit, items, onToggleFavorite, onDelete }: Outfit
               const category = CLOTHING_CATEGORIES.find((c) => c.value === item.category);
               return (
                 <div key={item.id} className="flex-shrink-0 w-20 text-center space-y-1">
-                  <div className="aspect-square bg-muted rounded-md overflow-hidden">
-                    <img
+                  <div className="aspect-square bg-muted rounded-md overflow-hidden relative">
+                    <Image
                       src={item.imageUrl}
                       alt={item.name}
-                      className="w-full h-full object-contain p-1"
+                      fill
+                      sizes="80px"
+                      className="object-contain p-1"
                     />
                   </div>
                   <p className="text-[10px] truncate">{category?.emoji}</p>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,11 +87,15 @@ export function ClothingForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex justify-center">
-        <img
-          src={imageUrl}
-          alt="Clothing preview"
-          className="max-h-64 object-contain rounded-lg border"
-        />
+        <div className="relative h-64 w-full max-w-md">
+          <Image
+            src={imageUrl}
+            alt="Clothing preview"
+            fill
+            sizes="(max-width: 768px) 100vw, 448px"
+            className="object-contain rounded-lg border"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

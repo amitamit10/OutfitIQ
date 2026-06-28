@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,10 +26,12 @@ export function ClothingCard({ item }: ClothingCardProps) {
     <Link href={`/wardrobe/${item.id}`}>
       <Card className="overflow-hidden hover:shadow-md transition-shadow h-full">
         <div className="aspect-square bg-muted relative">
-          <img
+          <Image
             src={item.imageUrl}
             alt={item.name}
-            className="w-full h-full object-contain p-2"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+            className="object-contain p-2"
           />
           <span
             className={`absolute top-2 right-2 h-3 w-3 rounded-full border-2 border-white ${LAUNDRY_COLORS[item.laundryStatus]}`}

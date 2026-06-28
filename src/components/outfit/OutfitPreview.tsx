@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { ClothingItem } from "@/types/clothing";
@@ -27,11 +28,13 @@ export function OutfitPreview({ itemIds, items, reasoning }: OutfitPreviewProps)
                 key={item.id}
                 className="flex-shrink-0 w-28 text-center space-y-2"
               >
-                <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                  <img
+                <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                  <Image
                     src={item.imageUrl}
                     alt={item.name}
-                    className="w-full h-full object-contain p-2"
+                    fill
+                    sizes="112px"
+                    className="object-contain p-2"
                   />
                 </div>
                 <p className="text-xs font-medium truncate">{item.name}</p>

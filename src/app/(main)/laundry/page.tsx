@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -90,11 +91,13 @@ export default function LaundryPage() {
             <Card key={item.id}>
               <CardContent className="p-4 flex items-center gap-4">
                 <Link href={`/wardrobe/${item.id}`}>
-                  <div className="h-16 w-16 bg-muted rounded-md overflow-hidden flex-shrink-0">
-                    <img
+                  <div className="h-16 w-16 bg-muted rounded-md overflow-hidden flex-shrink-0 relative">
+                    <Image
                       src={item.imageUrl}
                       alt={item.name}
-                      className="w-full h-full object-contain p-1"
+                      fill
+                      sizes="64px"
+                      className="object-contain p-1"
                     />
                   </div>
                 </Link>

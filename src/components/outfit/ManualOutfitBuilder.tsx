@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -124,11 +125,13 @@ export function ManualOutfitBuilder({
                           : "border-border hover:bg-muted"
                       }`}
                     >
-                      <div className="aspect-square bg-muted rounded-md overflow-hidden">
-                        <img
+                      <div className="aspect-square bg-muted rounded-md overflow-hidden relative">
+                        <Image
                           src={item.imageUrl}
                           alt={item.name}
-                          className="w-full h-full object-contain p-1"
+                          fill
+                          sizes="96px"
+                          className="object-contain p-1"
                         />
                       </div>
                       <p className="text-xs font-medium truncate">{item.name}</p>
