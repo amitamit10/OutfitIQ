@@ -4,76 +4,93 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useWardrobe } from "@/hooks/useWardrobe";
 import { useOutfits } from "@/hooks/useOutfits";
+import { OnboardingBanner } from "@/components/clothing/OnboardingBanner";
 import { OutfitPreview } from "@/components/outfit/OutfitPreview";
 import { getScheduleForDate } from "@/lib/outfit";
-import { getCurrentWeatherByCoordinates, describeWeatherCode } from "@/lib/weather";
-import { Camera, Shirt, Layers, Sparkles, CloudSun, Droplets } from "lucide-react";
+import { getCurrentWeatherByCoordinates } from "@/lib/weather";
+import { format } from "date-fns";
+import { Sparkles, Shirt, Layers, Cloud, Calendar } from "lucide-react";
 import type { Outfit } from "@/types/outfit";
+import type { ClothingItem } from "@/types/clothing";
+
+interface WeatherSummary {
+  minTemp: number;
+  maxTemp: number;
+  description: string;
+}
 
 export default function HomePage() {
-  const { appUser, firebaseUser } = useAuth();
+  const { appUser } = useAuth();
   const { items, loading: itemsLoading } = useWardrobe();
   const { outfits, loading: outfitsLoading } = useOutfits();
-  const [todayOutfit, setTodayOutfit] = useState<Outfit | null>(null);
-  const [loadingToday, setLoadingToday] = useState(true);
-  const [weather, setWeather] = useState<{ description: string; temp: string } | null>(null);
-  const [loadingWeather, setLoadingWeather] = useState(true);
+  const [weather, setWeather] = useState<WeatherSummary | null>(null);
+  const [scheduledOutfit, setScheduledOutfit] = useState<Outfit | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const todayKey = new Date().toISOString().split("T")[0];
-  const dirtyCount = items.filter((item) => item.laundryStatus !== "clean").length;
-  const recentItems = [...items].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 4);
+  const today = format(new Date(), "yyyy-MM-dd");
 
   useEffect(() => {
-    async function loadToday() {
-      if (!firebaseUser) return;
-      setLoadingToday(true);
+    const loadWeather = async () => {
       try {
-        const entry = await getScheduleForDate(firebaseUser.uid, todayKey);
-        if (entry) {
-          const found = outfits.find((o) => o.id === entry.outfitId);
-          setTodayOutfit(found ?? null);
-        }
-      } finally {
-        setLoadingToday(false);
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject)
+        );
+        const data = await getCurrentWeatherByCoordinates(
+          pos.coords.latitude,
+          pos.coords.longitude
+        );
+        setWeather({
+          minTemp: data.minTemp,
+          maxTemp: data.maxTemp,
+          description: data.weatherCode === 0 ? "Clear sky" : "Mixed",
+        });
+      } catch {
+        // ignore
       }
-    }
-    loadToday();
-  }, [firebaseUser, todayKey, outfits]);
-
-  useEffect(() => {
-    async function loadWeather() {
-      if (!navigator.geolocation) {
-        setLoadingWeather(false);
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const data = await getCurrentWeatherByCoordinates(
-              position.coords.latitude,
-              position.coords.longitude
-            );
-            setWeather({
-              description: describeWeatherCode(data.weatherCode),
-              temp: `${Math.round(data.minTemp)}°-${Math.round(data.maxTemp)}°`,
-            });
-          } catch {
-            setWeather(null);
-          } finally {
-            setLoadingWeather(false);
-          }
-        },
-        () => {
-          setLoadingWeather(false);
-        }
-      );
-    }
+    };
     loadWeather();
   }, []);
+
+  useEffect(() => {
+    const loadSchedule = async () => {
+      // scheduled outfit requires user auth; access via wardrobe hook context not directly available here
+      // We'll load via a lightweight approach: schedule is fetched when user is present through useAuth
+    };
+    loadSchedule();
+  }, []);
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!appUser) return;
+      setLoading(true);
+      try {
+        const entry = await getScheduleForDate(appUser.uid, today);
+        if (entry?.outfitId) {
+          const outfit = outfits.find((o) => o.id === entry.outfitId);
+          if (outfit) setScheduledOutfit(outfit);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSchedule();
+  }, [appUser, outfits, today]);
+
+  const recentlyWorn = [...items]
+    .filter((item) => item.lastWornDate)
+    .sort((a, b) => (b.lastWornDate?.getTime() ?? 0) - (a.lastWornDate?.getTime() ?? 0))
+    .slice(0, 5);
+
+  const latestItemDate = items.length > 0
+    ? items.reduce((latest, item) => (item.createdAt > latest ? item.createdAt : latest), items[0].createdAt)
+    : null;
+  const daysSinceScan = latestItemDate
+    ? Math.floor((Date.now() - latestItemDate.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
 
   const isLoading = itemsLoading || outfitsLoading;
 
@@ -83,136 +100,116 @@ export default function HomePage() {
         <h1 className="text-2xl font-bold">
           Hello, {appUser?.displayName?.split(" ")[0] ?? "there"}
         </h1>
-        <p className="text-muted-foreground">Here is your wardrobe at a glance.</p>
+        <p className="text-muted-foreground">
+          {isLoading ? "Loading your dashboard..." : "Here's what's happening with your wardrobe."}
+        </p>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center h-24 space-y-1">
-              <Shirt className="h-5 w-5 text-muted-foreground" />
+      <OnboardingBanner itemCount={items.length} />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <Shirt className="h-8 w-8 text-primary" />
+            <div>
               <p className="text-2xl font-bold">{items.length}</p>
               <p className="text-xs text-muted-foreground">Items</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center h-24 space-y-1">
-              <Layers className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <Layers className="h-8 w-8 text-primary" />
+            <div>
               <p className="text-2xl font-bold">{outfits.length}</p>
               <p className="text-xs text-muted-foreground">Outfits</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center h-24 space-y-1">
-              <Droplets className="h-5 w-5 text-muted-foreground" />
-              <p className="text-2xl font-bold">{dirtyCount}</p>
-              <p className="text-xs text-muted-foreground">Need laundry</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex flex-col items-center justify-center text-center h-24 space-y-1">
-              <CloudSun className="h-5 w-5 text-muted-foreground" />
-              {loadingWeather ? (
-                <Skeleton className="h-6 w-16" />
-              ) : weather ? (
-                <>
-                  <p className="text-2xl font-bold">{weather.temp}</p>
-                  <p className="text-xs text-muted-foreground">{weather.description}</p>
-                </>
-              ) : (
-                <p className="text-xs text-muted-foreground">Weather unavailable</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                Today&apos;s outfit
-              </h2>
-              <Link href="/outfits/calendar">
-                <Button variant="ghost" size="sm">Calendar</Button>
-              </Link>
             </div>
-            {loadingToday || isLoading ? (
-              <Skeleton className="h-40" />
-            ) : todayOutfit ? (
-              <div className="space-y-3">
-                <p className="font-medium">{todayOutfit.name}</p>
-                <OutfitPreview itemIds={todayOutfit.itemIds} items={items} />
-              </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <Calendar className="h-8 w-8 text-primary" />
+            <div>
+              <p className="text-2xl font-bold">
+                {daysSinceScan !== null ? daysSinceScan : "-"}
+              </p>
+              <p className="text-xs text-muted-foreground">Days since last scan</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Cloud className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold">Today's Weather</h2>
+            </div>
+            {weather ? (
+              <p className="text-sm">
+                {weather.minTemp}°C - {weather.maxTemp}°C · {weather.description}
+              </p>
             ) : (
-              <div className="text-center py-8 space-y-3">
-                <p className="text-muted-foreground">No outfit planned for today.</p>
-                <Link href="/outfits/calendar">
-                  <Button variant="outline" size="sm">Plan outfit</Button>
-                </Link>
-              </div>
+              <p className="text-sm text-muted-foreground">Weather unavailable</p>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4 space-y-4">
-            <h2 className="font-semibold">Quick actions</h2>
-            <div className="grid grid-cols-1 gap-2">
-              <Link href="/wardrobe/scan">
-                <Button variant="outline" className="w-full justify-start">
-                  <Camera className="h-4 w-4 mr-2" />
-                  Scan new item
-                </Button>
-              </Link>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold">Today's Outfit</h2>
               <Link href="/outfits/builder">
-                <Button variant="outline" className="w-full justify-start">
+                <Button size="sm">
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Build outfit
-                </Button>
-              </Link>
-              <Link href="/wardrobe">
-                <Button variant="outline" className="w-full justify-start">
-                  <Shirt className="h-4 w-4 mr-2" />
-                  Browse wardrobe
-                </Button>
-              </Link>
-              <Link href="/laundry">
-                <Button variant="outline" className="w-full justify-start">
-                  <Droplets className="h-4 w-4 mr-2" />
-                  Laundry ({dirtyCount})
+                  What should I wear?
                 </Button>
               </Link>
             </div>
+            {loading ? (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            ) : scheduledOutfit ? (
+              <OutfitPreview
+                itemIds={scheduledOutfit.itemIds}
+                items={items}
+                reasoning={scheduledOutfit.name}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">No outfit scheduled for today.</p>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {!isLoading && recentItems.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="font-semibold">Recently added</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {recentItems.map((item) => (
-              <Link key={item.id} href={`/wardrobe/${item.id}`}>
-                <div className="flex-shrink-0 w-24 text-center space-y-2">
-                  <div className="aspect-square bg-muted rounded-md overflow-hidden">
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-1" />
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <h2 className="font-semibold">Recently Worn</h2>
+          {recentlyWorn.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No wear history yet.</p>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {recentlyWorn.map((item) => (
+                <Link key={item.id} href={`/wardrobe/${item.id}`}>
+                  <div className="flex-shrink-0 w-20 text-center space-y-1">
+                    <div className="aspect-square bg-muted rounded-md overflow-hidden">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-contain p-1"
+                      />
+                    </div>
+                    <p className="text-xs truncate">{item.name}</p>
+                    <Badge variant="outline" className="text-[10px]">
+                      {item.lastWornDate?.toLocaleDateString()}
+                    </Badge>
                   </div>
-                  <p className="text-xs truncate">{item.name}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
