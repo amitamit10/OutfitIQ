@@ -5,7 +5,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDbInstance } from "@/lib/firebase";
 import type { AppUser, UserPreferences } from "@/types/user";
 
 const DEFAULT_PREFERENCES: UserPreferences = {
@@ -16,7 +16,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 };
 
 export function getUserRef(uid: string) {
-  return doc(db, "users", uid);
+  return doc(getDbInstance(), "users", uid);
 }
 
 export async function getUser(uid: string): Promise<AppUser | null> {

@@ -1,8 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { Header } from "@/components/layout/Header";
+
+export const dynamic = "force-dynamic";
 
 export default function MainLayout({
   children,
@@ -11,7 +16,6 @@ export default function MainLayout({
 }>) {
   const { firebaseUser, loading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !firebaseUser) {
@@ -32,8 +36,15 @@ export default function MainLayout({
   }
 
   return (
-    <div data-path={pathname} className="min-h-screen flex flex-col">
-      {children}
+    <div className="min-h-screen flex">
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header />
+        <main className="flex-1 p-4 pb-24 md:p-6 md:pb-6 overflow-auto">
+          {children}
+        </main>
+        <BottomNav />
+      </div>
     </div>
   );
 }

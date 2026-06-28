@@ -1,7 +1,7 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,9 +12,49 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+let app: FirebaseApp | null = null;
+let authInstance: Auth | null = null;
+let dbInstance: Firestore | null = null;
+let storageInstance: FirebaseStorage | null = null;
+let providerInstance: GoogleAuthProvider | null = null;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-export const googleProvider = new GoogleAuthProvider();
+function getFirebaseApp(): FirebaseApp {
+  if (app) return app;
+  if (getApps().length > 0) {
+    app = getApp();
+    return app;
+  }
+  if (!firebaseConfig.apiKey) {
+    throw new Error("Firebase is not configured");
+  }
+  app = initializeApp(firebaseConfig);
+  return app;
+}
+
+export function getAuthInstance(): Auth {
+  if (!authInstance) {
+    authInstance = getAuth(getFirebaseApp());
+  }
+  return authInstance;
+}
+
+export function getDbInstance(): Firestore {
+  if (!dbInstance) {
+    dbInstance = getFirestore(getFirebaseApp());
+  }
+  return dbInstance;
+}
+
+export function getStorageInstance(): FirebaseStorage {
+  if (!storageInstance) {
+    storageInstance = getStorage(getFirebaseApp());
+  }
+  return storageInstance;
+}
+
+export function getGoogleProvider(): GoogleAuthProvider {
+  if (!providerInstance) {
+    providerInstance = new GoogleAuthProvider();
+  }
+  return providerInstance;
+}

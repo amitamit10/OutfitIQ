@@ -1,3 +1,5 @@
+import { Timestamp, FieldValue } from "firebase/firestore";
+
 export interface UserPreferences {
   favoriteColors: string[];
   preferredStyle: "casual" | "business" | "sporty" | "minimal" | string;
@@ -11,5 +13,5 @@ export interface AppUser {
   displayName: string;
   photoURL: string;
   preferences: UserPreferences;
-  createdAt: Date;
+  createdAt: Date | Timestamp | FieldValue;
 }

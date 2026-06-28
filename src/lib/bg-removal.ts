@@ -4,17 +4,18 @@
  * to avoid loading the large WASM bundle on initial page load.
  */
 
+export type ImageSource = string | Blob;
+
 export async function removeBackground(imageSource: ImageSource): Promise<Blob> {
-  const { default: removeBackground } = await import("@imgly/background-removal");
-  return removeBackground(imageSource, {
+  const mod = await import("@imgly/background-removal");
+  const remove = (mod as unknown as { default: (image: ImageSource, config?: unknown) => Promise<Blob> }).default;
+  return remove(imageSource, {
     output: {
       format: "image/png",
       quality: 0.9,
     },
   });
 }
-
-export type ImageSource = string | Blob;
 
 export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {

@@ -14,7 +14,7 @@ import {
   signOut,
   User,
 } from "firebase/auth";
-import { auth, googleProvider } from "@/lib/firebase";
+import { getAuthInstance, getGoogleProvider } from "@/lib/firebase";
 import { ensureUser, getUser } from "@/lib/user";
 import type { AppUser } from "@/types/user";
 
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(getAuthInstance(), async (user) => {
       setFirebaseUser(user);
       if (user) {
         try {
@@ -66,12 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadAppUser]);
 
   const signInWithGoogle = useCallback(async () => {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(getAuthInstance(), getGoogleProvider());
     await loadAppUser(result.user);
   }, [loadAppUser]);
 
   const logout = useCallback(async () => {
-    await signOut(auth);
+    await signOut(getAuthInstance());
     setAppUser(null);
   }, []);
 
