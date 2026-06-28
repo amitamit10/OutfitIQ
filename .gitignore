@@ -42,3 +42,10 @@ next-env.d.ts
 
 # worktrees
 .worktrees
+
+# tool configs (local only)
+.kilo/
+.wakatime-project
+
+# playwright mcp logs
+.playwright-mcp/
