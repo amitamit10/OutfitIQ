@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -21,7 +19,6 @@ interface PackingChecklistProps {
 }
 
 export function PackingChecklist({ items, clothing, onChange }: PackingChecklistProps) {
-  const [selectedCategoryItem, setSelectedCategoryItem] = useState<Record<string, string>>({});
 
   const togglePacked = (index: number) => {
     const next = [...items];

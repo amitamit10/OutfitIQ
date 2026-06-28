@@ -134,7 +134,7 @@ export default function CoachPage() {
         content: assistantContent,
       });
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err) {
+    } catch {
       const errorMessage = await addCoachMessage(firebaseUser.uid, {
         role: "assistant",
         content: "Sorry, I had trouble responding. Please try again.",
@@ -167,7 +167,7 @@ export default function CoachPage() {
             <div className="h-full flex flex-col items-center justify-center text-center space-y-3 text-muted-foreground">
               <Bot className="h-10 w-10" />
               <p>Start a conversation with your style coach.</p>
-              <p className="text-sm">Try: "What should I wear today?" or "Does this jacket go with these pants?"</p>
+              <p className="text-sm">Try: &quot;What should I wear today?&quot; or &quot;Does this jacket go with these pants?&quot;</p>
             </div>
           ) : (
             <>

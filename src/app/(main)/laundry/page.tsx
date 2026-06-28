@@ -11,11 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { useWardrobe } from "@/hooks/useWardrobe";
 import { updateClothingItem } from "@/lib/wardrobe";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Shirt, CheckCircle2 } from "lucide-react";
+import { Shirt } from "lucide-react";
 import type { ClothingItem, LaundryStatus } from "@/types/clothing";
 
 const STATUS_CYCLE: LaundryStatus[] = ["clean", "dirty", "washing", "drying"];

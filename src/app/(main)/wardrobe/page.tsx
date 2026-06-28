@@ -23,7 +23,7 @@ const DEFAULT_FILTERS: WardrobeFilters = {
 
 function filterItems(items: ClothingItem[], filters: WardrobeFilters): ClothingItem[] {
   const searchLower = filters.search.toLowerCase();
-  let result = items.filter((item) => {
+  const result = items.filter((item) => {
     if (filters.category && item.category !== filters.category) return false;
     if (filters.season && !item.season.includes(filters.season) && !item.season.includes("all")) return false;
     if (filters.formality && item.formality !== filters.formality) return false;

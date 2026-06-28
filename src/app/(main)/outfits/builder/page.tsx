@@ -23,7 +23,6 @@ import { ManualOutfitBuilder } from "@/components/outfit/ManualOutfitBuilder";
 import { getOutfit, updateOutfit } from "@/lib/outfit";
 import { FORMALITIES } from "@/constants/categories";
 import { Sparkles, RefreshCw, Save, Check, AlertCircle } from "lucide-react";
-import type { ClothingItem } from "@/types/clothing";
 import type { Outfit, OutfitInput } from "@/types/outfit";
 
 interface GeneratedOutfit {

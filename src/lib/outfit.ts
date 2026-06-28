@@ -105,7 +105,6 @@ export async function logWearEvent(
   date: Date
 ): Promise<void> {
   const batchPromises: Promise<unknown>[] = [];
-  const dateString = date.toISOString().split("T")[0];
 
   for (const itemId of itemIds) {
     batchPromises.push(

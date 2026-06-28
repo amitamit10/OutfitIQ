@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { getTrips, addTrip, updateTrip, deleteTrip } from "@/lib/trip";
-import type { Trip, TripInput, PackingItem, DailyOutfit } from "@/types/trip";
+import type { Trip, TripInput } from "@/types/trip";
 
 export function useTrips() {
   const { firebaseUser } = useAuth();

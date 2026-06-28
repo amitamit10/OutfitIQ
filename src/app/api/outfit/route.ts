@@ -7,11 +7,6 @@ import type { ClothingItem } from "@/types/clothing";
 
 export const dynamic = "force-dynamic";
 
-interface OutfitCandidate {
-  item: ClothingItem;
-  reason: string;
-}
-
 interface OutfitRequest {
   items: ClothingItem[];
   occasion?: string;

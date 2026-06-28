@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { CLOTHING_CATEGORIES, SUBCATEGORIES, FORMALITIES, PATTERNS } from "@/constants/categories";
 import { CLOTHING_COLORS } from "@/constants/colors";
 import { SEASONS } from "@/constants/seasons";
-import type { ClothingInput, ClothingCategory, Formality, LaundryStatus } from "@/types/clothing";
+import type { ClothingInput, ClothingCategory, Formality } from "@/types/clothing";
 
 interface ClothingFormProps {
   initialData: Partial<ClothingInput>;

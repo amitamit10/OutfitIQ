@@ -48,7 +48,6 @@ export default function OutfitCalendarPage() {
   const loadSchedule = useCallback(async () => {
     if (!firebaseUser) return;
     setLoadingSchedule(true);
-    const start = format(new Date(), "yyyy-MM-dd");
     // Load schedule for selected date only for MVP
     const entry = await getScheduleForDate(firebaseUser.uid, dateKey);
     setSchedule((prev) => ({

@@ -15,7 +15,6 @@ import { getCurrentWeatherByCoordinates } from "@/lib/weather";
 import { format } from "date-fns";
 import { Sparkles, Shirt, Layers, Cloud, Calendar } from "lucide-react";
 import type { Outfit } from "@/types/outfit";
-import type { ClothingItem } from "@/types/clothing";
 
 interface WeatherSummary {
   minTemp: number;
@@ -30,6 +29,7 @@ export default function HomePage() {
   const [weather, setWeather] = useState<WeatherSummary | null>(null);
   const [scheduledOutfit, setScheduledOutfit] = useState<Outfit | null>(null);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(Date.now);
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -53,14 +53,9 @@ export default function HomePage() {
       }
     };
     loadWeather();
-  }, []);
 
-  useEffect(() => {
-    const loadSchedule = async () => {
-      // scheduled outfit requires user auth; access via wardrobe hook context not directly available here
-      // We'll load via a lightweight approach: schedule is fetched when user is present through useAuth
-    };
-    loadSchedule();
+    const interval = setInterval(() => setNow(Date.now()), 60 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -89,7 +84,7 @@ export default function HomePage() {
     ? items.reduce((latest, item) => (item.createdAt > latest ? item.createdAt : latest), items[0].createdAt)
     : null;
   const daysSinceScan = latestItemDate
-    ? Math.floor((Date.now() - latestItemDate.getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.floor((now - latestItemDate.getTime()) / (1000 * 60 * 60 * 24))
     : null;
 
   const isLoading = itemsLoading || outfitsLoading;
@@ -144,7 +139,7 @@ export default function HomePage() {
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
               <Cloud className="h-5 w-5 text-primary" />
-              <h2 className="font-semibold">Today's Weather</h2>
+              <h2 className="font-semibold">Today&apos;s Weather</h2>
             </div>
             {weather ? (
               <p className="text-sm">
@@ -159,7 +154,7 @@ export default function HomePage() {
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Today's Outfit</h2>
+              <h2 className="font-semibold">Today&apos;s Outfit</h2>
               <Link href="/outfits/builder">
                 <Button size="sm">
                   <Sparkles className="h-4 w-4 mr-2" />

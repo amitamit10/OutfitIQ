@@ -15,7 +15,7 @@ import { getTrip, updateTrip, assignItemsToPackingList } from "@/lib/trip";
 import { geocodeCity, getForecast, describeWeatherCode, type WeatherDay } from "@/lib/weather";
 import { PackingChecklist } from "@/components/packing/PackingChecklist";
 import { OutfitPreview } from "@/components/outfit/OutfitPreview";
-import { format, eachDayOfInterval } from "date-fns";
+import { format } from "date-fns";
 import { ArrowLeft, Cloud, Trash2 } from "lucide-react";
 import type { Trip, PackingItem, DailyOutfit } from "@/types/trip";
 
@@ -43,26 +43,30 @@ export default function TripDetailPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [firebaseUser, tripId, clothing.length]);
+  }, [firebaseUser, tripId, clothing]);
+
+  const destination = trip?.destination;
+  const startDate = trip?.startDate;
+  const endDate = trip?.endDate;
 
   useEffect(() => {
-    if (!trip) return;
+    if (!destination || !startDate || !endDate) return;
     setWeatherLoading(true);
-    geocodeCity(trip.destination)
+    geocodeCity(destination)
       .then((location) => {
         if (!location) return;
         return getForecast(
           location.latitude,
           location.longitude,
-          format(trip.startDate, "yyyy-MM-dd"),
-          format(trip.endDate, "yyyy-MM-dd")
+          format(startDate, "yyyy-MM-dd"),
+          format(endDate, "yyyy-MM-dd")
         );
       })
       .then((forecast) => {
         if (forecast) setWeather(forecast);
       })
       .finally(() => setWeatherLoading(false));
-  }, [trip?.destination, trip?.startDate, trip?.endDate]);
+  }, [destination, startDate, endDate]);
 
   const savePackingList = async (updated: PackingItem[]) => {
     if (!firebaseUser || !trip) return;
