@@ -66,8 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadAppUser]);
 
   const signInWithGoogle = useCallback(async () => {
-    const result = await signInWithPopup(getAuthInstance(), getGoogleProvider());
-    await loadAppUser(result.user);
+    try {
+      const result = await signInWithPopup(getAuthInstance(), getGoogleProvider());
+      await loadAppUser(result.user);
+    } catch (err) {
+      console.error("Google sign-in failed", err);
+    }
   }, [loadAppUser]);
 
   const logout = useCallback(async () => {
