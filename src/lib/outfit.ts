@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   Timestamp,
   where,
+  documentId,
 } from "firebase/firestore";
 import { getDbInstance } from "@/lib/firebase";
 import type { Outfit, OutfitInput, WearHistoryEntry, OutfitScheduleEntry } from "@/types/outfit";
@@ -189,9 +190,9 @@ export async function getScheduleRange(
 ): Promise<OutfitScheduleEntry[]> {
   const q = query(
     getScheduleCollection(uid),
-    where("date", ">=", startDate),
-    where("date", "<=", endDate),
-    orderBy("date", "asc")
+    where(documentId(), ">=", startDate),
+    where(documentId(), "<=", endDate),
+    orderBy(documentId(), "asc")
   );
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({
