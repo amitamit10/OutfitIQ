@@ -13,13 +13,21 @@ export interface RemovalProgress {
   progress: number; // 0–100
 }
 
+// Only request the GPU backend when the browser actually exposes WebGPU;
+// otherwise fall back to CPU. Requesting "gpu" on a browser without WebGPU
+// (Safari, older Chrome/Firefox) can throw instead of degrading gracefully.
+const hasWebGPU =
+  typeof navigator !== "undefined" &&
+  "gpu" in navigator &&
+  (navigator as { gpu?: unknown }).gpu != null;
+
 const BG_REMOVAL_CONFIG = {
   model: "isnet_quint8" as const, // quantized — ~2× faster than fp16
   output: {
     format: "image/png" as const,
     quality: 0.7,
   },
-  device: "gpu" as const, // WebGPU when available, falls back to CPU
+  device: (hasWebGPU ? "gpu" : "cpu") as "gpu" | "cpu",
   proxyToWorker: true, // non-blocking UI
   rescale: true,
 };
@@ -34,10 +42,10 @@ export async function scaleImageIfNeeded(
 ): Promise<Blob> {
   try {
     const bitmap = await createImageBitmap(source);
-    if (
-      (maxSide === 0 || (bitmap.width <= maxSide && bitmap.height <= maxSide)) &&
-      source.size < 500_000
-    ) {
+    // If the image is already within the target dimensions, return it as-is.
+    // Re-encoding a correctly-sized image to JPEG only adds work and would
+    // flatten any PNG transparency for no benefit.
+    if (maxSide === 0 || (bitmap.width <= maxSide && bitmap.height <= maxSide)) {
       bitmap.close();
       return source;
     }

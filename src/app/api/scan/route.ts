@@ -83,11 +83,25 @@ export async function POST(request: NextRequest) {
       err instanceof Error
         ? err.message
         : "Failed to classify image";
-    const status = message.toLowerCase().includes("api key")
-      ? 401
-      : message.toLowerCase().includes("model")
-      ? 404
-      : 500;
+    // Prefer the SDK's own HTTP status when available; only fall back to
+    // message heuristics, and keep those heuristics specific so a transient
+    // "model is overloaded" error isn't misread as a permanent 404.
+    const sdkStatus =
+      typeof (err as { status?: unknown })?.status === "number"
+        ? (err as { status: number }).status
+        : undefined;
+    const lower = message.toLowerCase();
+    const status =
+      sdkStatus ??
+      (lower.includes("api key") || lower.includes("unauthorized")
+        ? 401
+        : lower.includes("rate limit") || lower.includes("too many requests")
+        ? 429
+        : lower.includes("does not exist") ||
+          lower.includes("not found") ||
+          lower.includes("decommission")
+        ? 404
+        : 500);
     return NextResponse.json({ error: message }, { status });
   }
 }

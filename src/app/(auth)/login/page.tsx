@@ -12,10 +12,11 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (firebaseUser && !loading) {
+    // Don't redirect if profile loading failed — let the error surface here.
+    if (firebaseUser && !loading && !authError) {
       router.replace("/");
     }
-  }, [firebaseUser, loading, router]);
+  }, [firebaseUser, loading, authError, router]);
 
   if (loading) {
     return (

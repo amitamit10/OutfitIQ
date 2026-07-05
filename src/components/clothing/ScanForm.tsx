@@ -108,7 +108,6 @@ export function ScanForm() {
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string>("");
 
   // Fallback image search
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,7 +132,7 @@ export function ScanForm() {
     setError(null);
     setSearchResults([]);
     setProgress(0);
-    setFileName(file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
+    const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ').trim();
 
     try {
       setStep("scaling");
@@ -192,13 +191,10 @@ export function ScanForm() {
       setStep("confirm");
       setProgress(100);
 
-      // Auto-trigger fallback image search with the best available query.
-      const guess =
-        aiResult?.name ??
-        (aiResult?.category ? `clothing ${aiResult.category}` : undefined) ??
-        fileName ??
-        "clothing item";
-      const query = guess.length > 1 ? guess : "clothing item";
+      // Auto-trigger fallback image search. Classification failed here, so
+      // aiResult is still null — derive the query from the file name instead.
+      // Use the local cleanName (state `fileName` hasn't flushed yet this tick).
+      const query = cleanName.length > 1 ? cleanName : "clothing item";
       setSearchQuery(query);
       setTimeout(() => handleSearchOnline(query), 0);
     }
@@ -273,13 +269,19 @@ export function ScanForm() {
   // --- Save ---
   const handleSave = async (data: ClothingInput) => {
     if (!firebaseUser) return;
+
+    // Guard before showing the saving spinner so we never get stuck on it.
+    const imageSource = processedDataUrl || selectedStockUrl || originalDataUrl;
+    if (!imageSource) {
+      setError("No image available to save. Please upload a photo or pick one online.");
+      setStep("confirm");
+      return;
+    }
+
     setStep("saving");
     setProgress(0);
     setProgressLabel("Saving to your wardrobe...");
     try {
-      if (!processedDataUrl && !selectedStockUrl) return;
-
-      const imageSource = processedDataUrl || selectedStockUrl!;
       const imageBlob = await fetch(imageSource).then((r) => r.blob());
       setProgress(30);
 
@@ -469,7 +471,7 @@ export function ScanForm() {
           material: aiResult?.material,
           size: aiResult?.size,
         }}
-        imageUrl={processedDataUrl ?? ""}
+        imageUrl={processedDataUrl ?? originalDataUrl ?? ""}
         onSubmit={handleSave}
         onCancel={() => { setStep("upload"); setError(null); setSearchResults([]); }}
         submitLabel="Save to Wardrobe"
