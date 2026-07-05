@@ -65,7 +65,9 @@ export async function POST(request: NextRequest) {
         },
       ],
       temperature: 0.2,
-      max_tokens: 1024,
+      max_completion_tokens: 1024,
+      // Ask the model to emit a JSON object so we can parse reliably.
+      response_format: { type: "json_object" },
     });
 
     const raw = chatCompletion.choices[0]?.message?.content?.trim() ?? "";
@@ -75,9 +77,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ result: parsed });
   } catch (err) {
     console.error("Groq vision error", err);
-    return NextResponse.json(
-      { error: "Failed to classify image" },
-      { status: 500 }
-    );
+    // Surface the real upstream message so the client can show something
+    // actionable (e.g. "Invalid API Key") instead of a generic failure.
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Failed to classify image";
+    const status = message.toLowerCase().includes("api key")
+      ? 401
+      : message.toLowerCase().includes("model")
+      ? 404
+      : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

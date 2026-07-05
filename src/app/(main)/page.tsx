@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useWardrobe } from "@/hooks/useWardrobe";
 import { useOutfits } from "@/hooks/useOutfits";
@@ -14,7 +15,7 @@ import { OutfitPreview } from "@/components/outfit/OutfitPreview";
 import { getScheduleForDate } from "@/lib/outfit";
 import { getCurrentWeatherByCoordinates } from "@/lib/weather";
 import { format } from "date-fns";
-import { Sparkles, Shirt, Layers, Cloud, Calendar } from "lucide-react";
+import { Sparkles, Shirt, Layers, Cloud, Calendar, ArrowRight } from "lucide-react";
 import type { Outfit } from "@/types/outfit";
 
 interface WeatherSummary {
@@ -29,7 +30,7 @@ export default function HomePage() {
   const { outfits, loading: outfitsLoading } = useOutfits();
   const [weather, setWeather] = useState<WeatherSummary | null>(null);
   const [scheduledOutfit, setScheduledOutfit] = useState<Outfit | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
   const [now, setNow] = useState(Date.now);
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -62,7 +63,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchSchedule = async () => {
       if (!appUser) return;
-      setLoading(true);
+      setScheduleLoading(true);
       try {
         const entry = await getScheduleForDate(appUser.uid, today);
         if (entry?.outfitId) {
@@ -70,7 +71,7 @@ export default function HomePage() {
           if (outfit) setScheduledOutfit(outfit);
         }
       } finally {
-        setLoading(false);
+        setScheduleLoading(false);
       }
     };
     fetchSchedule();
@@ -104,35 +105,24 @@ export default function HomePage() {
       <OnboardingBanner itemCount={items.length} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <Shirt className="h-8 w-8 text-primary" />
-            <div>
-              <p className="text-2xl font-bold">{items.length}</p>
-              <p className="text-xs text-muted-foreground">Items</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <Layers className="h-8 w-8 text-primary" />
-            <div>
-              <p className="text-2xl font-bold">{outfits.length}</p>
-              <p className="text-xs text-muted-foreground">Outfits</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <Calendar className="h-8 w-8 text-primary" />
-            <div>
-              <p className="text-2xl font-bold">
-                {daysSinceScan !== null ? daysSinceScan : "-"}
-              </p>
-              <p className="text-xs text-muted-foreground">Days since last scan</p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={<Shirt className="h-8 w-8 text-primary" />}
+          label="Items"
+          value={items.length}
+          loading={itemsLoading}
+        />
+        <StatCard
+          icon={<Layers className="h-8 w-8 text-primary" />}
+          label="Outfits"
+          value={outfits.length}
+          loading={outfitsLoading}
+        />
+        <StatCard
+          icon={<Calendar className="h-8 w-8 text-primary" />}
+          label="Days since last scan"
+          value={daysSinceScan !== null ? daysSinceScan : "-"}
+          loading={itemsLoading}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -163,8 +153,8 @@ export default function HomePage() {
                 </Button>
               </Link>
             </div>
-            {loading ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
+            {scheduleLoading ? (
+              <Skeleton className="h-32 rounded-lg" />
             ) : scheduledOutfit ? (
               <OutfitPreview
                 itemIds={scheduledOutfit.itemIds}
@@ -172,7 +162,12 @@ export default function HomePage() {
                 reasoning={scheduledOutfit.name}
               />
             ) : (
-              <p className="text-sm text-muted-foreground">No outfit scheduled for today.</p>
+              <div className="py-6 text-center text-sm text-muted-foreground bg-muted/30 rounded-lg">
+                <p>No outfit scheduled for today.</p>
+                <Link href="/outfits/calendar" className="inline-flex items-center gap-1 text-primary hover:underline mt-1">
+                  Plan your week <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -209,5 +204,33 @@ export default function HomePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  loading,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  loading: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent className="p-4 flex items-center gap-3">
+        {icon}
+        <div>
+          {loading ? (
+            <Skeleton className="h-8 w-16 mb-1" />
+          ) : (
+            <p className="text-2xl font-bold">{value}</p>
+          )}
+          <p className="text-xs text-muted-foreground">{label}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

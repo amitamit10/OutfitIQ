@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useWardrobe } from "@/hooks/useWardrobe";
 import { updateClothingItem } from "@/lib/wardrobe";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -25,6 +28,13 @@ const STATUS_COLORS: Record<LaundryStatus, string> = {
   dirty: "bg-red-500",
   washing: "bg-blue-500",
   drying: "bg-yellow-500",
+};
+
+const STATUS_LABELS: Record<LaundryStatus, string> = {
+  clean: "Clean",
+  dirty: "Dirty",
+  washing: "Washing",
+  drying: "Drying",
 };
 
 export default function LaundryPage() {
@@ -54,37 +64,35 @@ export default function LaundryPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold">Laundry Tracker</h1>
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="space-y-6">
+        <PageHeader title="Laundry Tracker" description="Loading items..." />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Laundry Tracker</h1>
-          <p className="text-muted-foreground">
-            {dirtyItems.length} dirty item{dirtyItems.length === 1 ? "" : "s"}
-          </p>
-        </div>
-        <Button variant="outline" onClick={markAllWornAsDirty}>
+      <PageHeader
+        title="Laundry Tracker"
+        description={`${dirtyItems.length} dirty item${dirtyItems.length === 1 ? "" : "s"}`}
+      >
+        <Button variant="outline" onClick={markAllWornAsDirty} disabled={items.length === 0}>
           Mark all worn as dirty
         </Button>
-      </div>
+      </PageHeader>
 
       {items.length === 0 ? (
-        <Card className="bg-muted/30">
-          <CardContent className="p-6 text-center space-y-4">
-            <Shirt className="h-10 w-10 text-muted-foreground mx-auto" />
-            <p className="font-medium">No items to track yet.</p>
-            <Link href="/wardrobe/scan">
-              <Button>Add your first item</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Shirt}
+          title="No items to track yet"
+          description="Add clothes to your wardrobe to start tracking laundry status."
+          action={{ label: "Add your first item", href: "/wardrobe/scan" }}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {items.map((item) => (
@@ -106,7 +114,7 @@ export default function LaundryPage() {
                     <h3 className="font-medium truncate">{item.name}</h3>
                     <span
                       className={`h-2.5 w-2.5 rounded-full ${STATUS_COLORS[item.laundryStatus]}`}
-                      title={item.laundryStatus}
+                      title={`Laundry: ${item.laundryStatus}`}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -119,13 +127,13 @@ export default function LaundryPage() {
                     handleStatusChange(item, value as LaundryStatus)
                   }
                 >
-                  <SelectTrigger className="w-[130px]">
+                  <SelectTrigger className="w-[130px]" aria-label={`Change laundry status for ${item.name}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {STATUS_CYCLE.map((status) => (
                       <SelectItem key={status} value={status} className="capitalize">
-                        {status}
+                        {STATUS_LABELS[status]}
                       </SelectItem>
                     ))}
                   </SelectContent>

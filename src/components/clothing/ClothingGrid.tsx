@@ -1,7 +1,7 @@
-"use client";
-
 import { ClothingCard } from "./ClothingCard";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { ClothingItem } from "@/types/clothing";
+import { SearchX } from "lucide-react";
 
 interface ClothingGridProps {
   items: ClothingItem[];
@@ -10,9 +10,11 @@ interface ClothingGridProps {
 export function ClothingGrid({ items }: ClothingGridProps) {
   if (items.length === 0) {
     return (
-      <p className="text-center text-muted-foreground py-12">
-        No items match your filters.
-      </p>
+      <EmptyState
+        icon={SearchX}
+        title="No items match your filters"
+        description="Try clearing some filters to see more of your wardrobe."
+      />
     );
   }
 

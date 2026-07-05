@@ -3,12 +3,14 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { useWardrobe } from "@/hooks/useWardrobe";
 import { useOutfits } from "@/hooks/useOutfits";
 import { CLOTHING_CATEGORIES } from "@/constants/categories";
 import { getColorLabel } from "@/constants/colors";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Shirt, Star, Wallet, AlertCircle } from "lucide-react";
+import { Shirt, Star, Wallet, AlertCircle, TrendingUp } from "lucide-react";
 
 const CHART_COLORS = ["#000000", "#808080", "#000080", "#8b4513", "#008000", "#800020", "#ff0000", "#ffa500", "#800080"];
 
@@ -67,19 +69,24 @@ export default function StatisticsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64" />
+      <div className="space-y-6">
+        <PageHeader title="Statistics" description="Loading insights..." />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-64 rounded-lg" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Statistics</h1>
-        <p className="text-muted-foreground">Insights about your wardrobe.</p>
-      </div>
+      <PageHeader
+        title="Statistics"
+        description="Insights about your wardrobe and outfit habits."
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={<Shirt className="h-5 w-5" />} label="Total items" value={items.length} />
@@ -89,11 +96,12 @@ export default function StatisticsPage() {
       </div>
 
       {items.length === 0 ? (
-        <Card className="bg-muted/30">
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">Add items to see statistics.</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={TrendingUp}
+          title="No data yet"
+          description="Add items to your wardrobe to unlock insights about colors, categories, and wear patterns."
+          action={{ label: "Add first item", href: "/wardrobe/scan" }}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -143,8 +151,8 @@ export default function StatisticsPage() {
               <ul className="space-y-1">
                 {mostWorn.map((item) => (
                   <li key={item.id} className="flex justify-between text-sm">
-                    <span>{item.name}</span>
-                    <span className="text-muted-foreground">{item.wearCount} wears</span>
+                    <span className="truncate mr-4">{item.name}</span>
+                    <span className="text-muted-foreground shrink-0">{item.wearCount} wears</span>
                   </li>
                 ))}
               </ul>
@@ -157,8 +165,8 @@ export default function StatisticsPage() {
               <ul className="space-y-1">
                 {leastWorn.map((item) => (
                   <li key={item.id} className="flex justify-between text-sm">
-                    <span>{item.name}</span>
-                    <span className="text-muted-foreground">{item.wearCount} wears</span>
+                    <span className="truncate mr-4">{item.name}</span>
+                    <span className="text-muted-foreground shrink-0">{item.wearCount} wears</span>
                   </li>
                 ))}
               </ul>
@@ -175,8 +183,8 @@ export default function StatisticsPage() {
                 <ul className="space-y-1">
                   {ratedOutfits.slice(0, 5).map((outfit) => (
                     <li key={outfit.id} className="flex justify-between text-sm">
-                      <span>{outfit.name}</span>
-                      <span className="text-muted-foreground">{outfit.rating}/5</span>
+                      <span className="truncate mr-4">{outfit.name}</span>
+                      <span className="text-muted-foreground shrink-0">{outfit.rating}/5</span>
                     </li>
                   ))}
                 </ul>

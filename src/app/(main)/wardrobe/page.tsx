@@ -8,7 +8,10 @@ import { useWardrobe } from "@/hooks/useWardrobe";
 import { OnboardingBanner } from "@/components/clothing/OnboardingBanner";
 import { ClothingFilters, type WardrobeFilters } from "@/components/clothing/ClothingFilters";
 import { ClothingGrid } from "@/components/clothing/ClothingGrid";
-import { Camera, Shirt } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingGrid } from "@/components/ui/loading-grid";
+import { Camera, Shirt, SlidersHorizontal } from "lucide-react";
 import type { ClothingItem } from "@/types/clothing";
 
 const DEFAULT_FILTERS: WardrobeFilters = {
@@ -65,47 +68,45 @@ export default function WardrobePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Wardrobe</h1>
-          <p className="text-muted-foreground">
-            {loading ? "Loading..." : `${items.length} items`}
-          </p>
-        </div>
+      <PageHeader
+        title="Wardrobe"
+        description={loading ? "Loading your items..." : `${items.length} item${items.length === 1 ? "" : "s"}`}
+      >
         <Link href="/wardrobe/scan">
           <Button>
             <Camera className="h-4 w-4 mr-2" />
             Add Item
           </Button>
         </Link>
-      </div>
+      </PageHeader>
 
       <OnboardingBanner itemCount={items.length} />
 
-      {!loading && items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 border rounded-lg bg-muted/30">
-          <Shirt className="h-12 w-12 text-muted-foreground" />
-          <div>
-            <p className="font-medium">Your wardrobe is empty</p>
-            <p className="text-sm text-muted-foreground">
-              Scan your first item to get started.
-            </p>
-          </div>
-          <Link href="/wardrobe/scan">
-            <Button>Scan first item</Button>
-          </Link>
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-24" />
+          <LoadingGrid count={8} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" />
         </div>
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon={Shirt}
+          title="Your wardrobe is empty"
+          description="Start by scanning or uploading your first clothing item. We'll help you categorize it automatically."
+          action={{ label: "Scan your first item", href: "/wardrobe/scan" }}
+        />
       ) : (
         <div className="space-y-4">
-          {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="aspect-square" />
-              ))}
-            </div>
+          <ClothingFilters filters={filters} onChange={setFilters} />
+          {filteredItems.length === 0 ? (
+            <EmptyState
+              icon={SlidersHorizontal}
+              title="No items match your filters"
+              description="Try adjusting your search or filters to find what you're looking for."
+              action={{ label: "Clear filters", href: "#", variant: "outline" }}
+              onAction={() => setFilters(DEFAULT_FILTERS)}
+            />
           ) : (
             <>
-              <ClothingFilters filters={filters} onChange={setFilters} />
               <p className="text-sm text-muted-foreground">
                 {filteredItems.length} of {items.length} items
               </p>

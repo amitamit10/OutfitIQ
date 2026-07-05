@@ -22,9 +22,12 @@ interface AuthContextValue {
   firebaseUser: User | null;
   appUser: AppUser | null;
   loading: boolean;
+  authLoading: boolean;
+  authError: string | null;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   refreshAppUser: () => Promise<void>;
+  clearAuthError: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -33,6 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const loadAppUser = useCallback(async (user: User) => {
     const existing = await getUser(user.uid);
@@ -56,6 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await loadAppUser(user);
         } catch (err) {
           console.error("Failed to load app user", err);
+          setAuthError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load your profile. Please try again."
+          );
         }
       } else {
         setAppUser(null);
@@ -66,11 +76,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadAppUser]);
 
   const signInWithGoogle = useCallback(async () => {
+    setAuthLoading(true);
+    setAuthError(null);
     try {
       const result = await signInWithPopup(getAuthInstance(), getGoogleProvider());
       await loadAppUser(result.user);
     } catch (err) {
       console.error("Google sign-in failed", err);
+      let message = "Sign-in failed. Please try again.";
+      if (err instanceof Error) {
+        if (err.message.includes("popup-closed-by-user")) {
+          message = "Sign-in popup was closed. Please try again.";
+        } else if (err.message.includes("network")) {
+          message = "Network error. Check your connection and try again.";
+        } else if (err.message.includes("unauthorized-domain")) {
+          message = "This domain is not authorized for sign-in.";
+        } else {
+          message = err.message;
+        }
+      }
+      setAuthError(message);
+    } finally {
+      setAuthLoading(false);
     }
   }, [loadAppUser]);
 
@@ -85,15 +112,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (refreshed) setAppUser(refreshed);
   }, [firebaseUser]);
 
+  const clearAuthError = useCallback(() => setAuthError(null), []);
+
   return (
     <AuthContext.Provider
       value={{
         firebaseUser,
         appUser,
         loading,
+        authLoading,
+        authError,
         signInWithGoogle,
         logout,
         refreshAppUser,
+        clearAuthError,
       }}
     >
       {children}

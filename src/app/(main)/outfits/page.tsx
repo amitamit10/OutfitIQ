@@ -8,7 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useOutfits } from "@/hooks/useOutfits";
 import { useWardrobe } from "@/hooks/useWardrobe";
 import { OutfitCard } from "@/components/outfit/OutfitCard";
-import { Plus, Sparkles } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Plus, Sparkles, Heart, SlidersHorizontal } from "lucide-react";
 
 export default function OutfitsPage() {
   const { outfits, loading, update, remove } = useOutfits();
@@ -24,46 +26,43 @@ export default function OutfitsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Outfits</h1>
-          <p className="text-muted-foreground">
-            {loadingAny ? "Loading..." : `${outfits.length} saved outfits`}
-          </p>
-        </div>
+      <PageHeader
+        title="Outfits"
+        description={loadingAny ? "Loading your outfits..." : `${outfits.length} saved outfit${outfits.length === 1 ? "" : "s"}`}
+      >
         <Link href="/outfits/builder">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             New Outfit
           </Button>
         </Link>
-      </div>
+      </PageHeader>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="favorites">Favorites</TabsTrigger>
         </TabsList>
-        <TabsContent value="all" className="space-y-4">
+        <TabsContent value="all" className="space-y-4 mt-4">
           {loadingAny ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-40" />
+                <Skeleton key={i} className="h-40 rounded-lg" />
               ))}
             </div>
+          ) : outfits.length === 0 ? (
+            <EmptyState
+              icon={Sparkles}
+              title="No outfits yet"
+              description="Build your first outfit from your wardrobe items and save it for later."
+              action={{ label: "Create outfit", href: "/outfits/builder" }}
+            />
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 space-y-4 border rounded-lg bg-muted/30">
-              <Sparkles className="h-10 w-10 text-muted-foreground mx-auto" />
-              <div>
-                <p className="font-medium">No outfits yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Build your first outfit to see it here.
-                </p>
-              </div>
-              <Link href="/outfits/builder">
-                <Button>Create outfit</Button>
-              </Link>
-            </div>
+            <EmptyState
+              icon={SlidersHorizontal}
+              title="No outfits match"
+              description="Try switching tabs or create a new outfit."
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filtered.map((outfit) => (
@@ -80,11 +79,20 @@ export default function OutfitsPage() {
             </div>
           )}
         </TabsContent>
-        <TabsContent value="favorites" className="space-y-4">
-          {filtered.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12">
-              No favorite outfits yet.
-            </p>
+        <TabsContent value="favorites" className="space-y-4 mt-4">
+          {loadingAny ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-40 rounded-lg" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={Heart}
+              title="No favorite outfits yet"
+              description="Tap the heart icon on any outfit to save it here for quick access."
+              action={{ label: "Browse outfits", href: "/outfits" }}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filtered.map((outfit) => (

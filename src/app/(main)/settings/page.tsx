@@ -19,12 +19,14 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { updateUserPreferences } from "@/lib/user";
 import { CLOTHING_COLORS } from "@/constants/colors";
 import { FORMALITIES } from "@/constants/categories";
-import { User, Trash2, Save } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { User, Trash2, Save, Check } from "lucide-react";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { appUser, firebaseUser, logout, refreshAppUser } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [favoriteColors, setFavoriteColors] = useState<string[]>(
     appUser?.preferences.favoriteColors ?? []
   );
@@ -54,6 +56,8 @@ export default function SettingsPage() {
     });
     await refreshAppUser();
     setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   const handleDeleteAccount = async () => {
@@ -68,10 +72,10 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your preferences and account.</p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description="Manage your preferences and account."
+      />
 
       <Card>
         <CardContent className="p-4 space-y-4">
@@ -158,8 +162,12 @@ export default function SettingsPage() {
           </div>
 
           <Button onClick={handleSave} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? "Saving..." : "Save preferences"}
+            {saved ? (
+              <Check className="h-4 w-4 mr-2" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            {saving ? "Saving..." : saved ? "Saved" : "Save preferences"}
           </Button>
         </CardContent>
       </Card>

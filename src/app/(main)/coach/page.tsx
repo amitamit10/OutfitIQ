@@ -13,6 +13,13 @@ import { getCurrentWeatherByCoordinates, describeWeatherCode } from "@/lib/weath
 import { Send, Bot, User, Sparkles } from "lucide-react";
 import type { CoachMessage } from "@/lib/coach";
 
+const SUGGESTIONS = [
+  "What should I wear today?",
+  "Suggest an outfit for a rainy day",
+  "Does this jacket go with these pants?",
+  "What am I missing in my wardrobe?",
+];
+
 export default function CoachPage() {
   const { firebaseUser, appUser } = useAuth();
   const { items } = useWardrobe();
@@ -81,10 +88,11 @@ export default function CoachPage() {
     };
   };
 
-  const handleSend = async () => {
-    if (!firebaseUser || !input.trim() || streaming) return;
+  const handleSend = async (text?: string) => {
+    if (!firebaseUser || streaming) return;
+    const userContent = (text ?? input).trim();
+    if (!userContent) return;
 
-    const userContent = input.trim();
     setInput("");
     setStreaming(true);
 
@@ -160,14 +168,29 @@ export default function CoachPage() {
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-16" />
+                <Skeleton key={i} className="h-16 rounded-lg" />
               ))}
             </div>
           ) : messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-3 text-muted-foreground">
-              <Bot className="h-10 w-10" />
-              <p>Start a conversation with your style coach.</p>
-              <p className="text-sm">Try: &quot;What should I wear today?&quot; or &quot;Does this jacket go with these pants?&quot;</p>
+            <div className="h-full flex flex-col items-center justify-center text-center px-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Bot className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Your personal style coach</h3>
+              <p className="text-sm text-muted-foreground max-w-md mb-6">
+                Ask for outfit ideas, color advice, or wardrobe recommendations based on your own clothes and the weather.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 max-w-md">
+                {SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => handleSend(suggestion)}
+                    className="text-sm px-3 py-1.5 rounded-full border bg-background hover:bg-accent transition-colors text-left"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <>
@@ -231,7 +254,7 @@ export default function CoachPage() {
               disabled={streaming || loading}
               className="flex-1"
             />
-            <Button type="submit" disabled={streaming || loading || !input.trim()}>
+            <Button type="submit" disabled={streaming || loading || !input.trim()} aria-label="Send message">
               <Send className="h-4 w-4" />
             </Button>
           </form>
